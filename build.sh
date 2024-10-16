@@ -1,13 +1,18 @@
 #!/bin/sh
 echo 'Deleting tesseract binary from current folder...'
 rm ./tesseract
-echo 'Bringing up Docker Container...'
-docker-compose up -d
+
+echo 'Building Docker image for x86_64 architecture...'
+docker buildx build --platform linux/amd64 -t tesseract-static-builder .
+
+echo 'Creating temporary container...'
+docker create --name temp tesseract-static-builder
+
 echo 'Copying Built Tesseract Binary...'
-docker cp `docker-compose ps -q tesseract`:/tesseract-4.1.0/tesseract .
-echo 'Killing Container...'
-docker-compose kill
-echo 'Taking Container Down...'
-docker-compose down
+docker cp temp:/app/bin/tesseract ./tesseract
+
+echo 'Removing temporary container...'
+docker rm temp
+
 echo 'Done building static Tesseract binary!'
-echo 'Copy the "tesseract" executable from this folder to wherever you want it!'
+echo 'The "tesseract" executable is now in the current folder.'
